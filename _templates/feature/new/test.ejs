@@ -1,0 +1,28 @@
+---
+to: src/features/<%= Name %>/test/<%= Name %>Repository.test.ts
+---
+import Fastify, { FastifyInstance } from 'fastify'
+import config from '@/app/config'
+import registerDBPlugin from '../../DB'
+import <%= Name %>Repository from '../<%= Name %>Repository'
+
+describe('<%= Name %>Repository', () => {
+  let f: FastifyInstance
+
+  beforeAll(async () => {
+    f = Fastify(config)
+    await registerDBPlugin(f)
+  })
+
+  afterAll(async () => {
+    await f.close()
+  })
+
+  it('should have CRUD functions', () => {
+    const createCRUDMock = jest.spyOn(f.DBService, 'createCRUD')
+    const <%= h.changeCase.camel(name) %>Repository = <%= Name %>Repository(f)
+
+    expect(<%= h.changeCase.camel(name) %>Repository).toMatchObject(createCRUDMock.mock.results[0]?.value)
+  })
+
+})

@@ -1,0 +1,26 @@
+---
+to: src/features/<%= Name %>/index.ts
+---
+import type { AppFastifyInstance } from '@/app/app'
+import <%= Name %>Controller from './<%= Name %>Controller'
+import <%= Name %>Repository from './<%= Name %>Repository'
+import <%= Name %>Service from './<%= Name %>Service'
+
+export interface <%= Name %>ServiceFastifyInstance extends AppFastifyInstance {
+  <%= h.changeCase.camel(name) %>Repository: ReturnType<typeof <%= Name %>Repository>
+}
+
+export interface <%= Name %>ControllerFastifyInstance extends <%= Name %>ServiceFastifyInstance {
+  <%= h.changeCase.camel(name) %>Service: ReturnType<typeof <%= Name %>Service>
+}
+
+async function <%= Name %>Plugin(f: AppFastifyInstance) {
+  f.decorate('<%= h.changeCase.camel(name) %>Repository', <%= Name %>Repository(f))
+  f.decorate('<%= h.changeCase.camel(name) %>Service', <%= Name %>Service(f as <%= Name %>ServiceFastifyInstance))
+
+  <%= Name %>Controller(f as <%= Name %>ControllerFastifyInstance)
+}
+
+export default async function register<%= Name %>Plugin(f: AppFastifyInstance) {
+  return f.register(<%= Name %>Plugin, { prefix: '<%= h.changeCase.camel(name) %>' })
+}

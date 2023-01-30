@@ -1,0 +1,27 @@
+name: Tests
+on:
+  push:
+env:
+  NODE_VERSION: 18
+  # Disable husky hooks
+  HUSKY: 0
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: ./.github/actions/yarn-cache
+      - name: Install modules
+        run: yarn --immutable
+      - name: Build
+        run: yarn build
+      - name: Lint
+        run: yarn lint:nocache
+      - name: Format
+        run: yarn format
+      - name: Test
+        # Standard GitHub Linux runners have 2-core CPUs at the moment
+        run: yarn test:coverage --maxWorkers=2

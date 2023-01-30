@@ -1,0 +1,10 @@
+# These won't exist in the repo but on a local machine they still do
+# which sometimes could be used for testing builds
+.pnp*
+.env
+dist
+.vscode
+.idea
+.cache
+node_modules
+sentences.sqlite3

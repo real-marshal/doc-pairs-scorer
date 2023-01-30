@@ -1,0 +1,24 @@
+---
+to: src/features/<%= Name.match(/(\w+)(?:Repository|Service|Controller)/)[1] %>/test/<%= Name %>.test.ts
+---
+import Fastify, { FastifyInstance } from 'fastify'
+import config from '@/app/config'
+import registerDBPlugin from '../../DB'
+import <%= Name %> from '../<%= Name %>'
+
+describe('<%= Name %>', () => {
+  let f: FastifyInstance
+
+  beforeAll(async () => {
+    f = Fastify(config)
+    await registerDBPlugin(f)
+  })
+
+  afterAll(async () => {
+    await f.close()
+  })
+
+  it('should ', () => {
+    const <%= h.changeCase.camel(name) %> = <%= Name %>(f)
+  })
+})

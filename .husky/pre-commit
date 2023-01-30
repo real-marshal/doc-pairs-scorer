@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+yarn concurrently 'yarn test -o' 'yarn lint' 'yarn format'

@@ -1,0 +1,16 @@
+---
+to: src/features/<%= Name %>/<%= Name%>Repository.ts
+---
+import type { AppFastifyInstance } from '@/app/app'
+import type { <%= Name %>, <%= Name %>Id, <%= Name %>Initializer, <%= Name %>Mutator } from '@/schemas'
+
+export default function <%= Name %>Repository(f: AppFastifyInstance) {
+  const { createCRUD } = f.DBService
+
+  const CRUD = createCRUD<<%= Name %>, <%= Name %>Id, <%= Name %>Initializer, <%= Name %>Mutator>('<%= h.changeCase.camel(name) %>')
+
+  return {
+    ...CRUD,
+  }
+}
+

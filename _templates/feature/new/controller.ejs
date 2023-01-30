@@ -1,0 +1,95 @@
+---
+to: src/features/<%= Name %>/<%= Name%>Controller.ts
+---
+import type { <%= Name %>ControllerFastifyInstance } from './index'
+import { Static, Type } from '@sinclair/typebox'
+import type { <%= Name %>Id } from '@/schemas'
+
+export default function <%= Name %>Controller(f: <%= Name %>ControllerFastifyInstance) {
+  const Get<%= Name %>ParamsSchema = Type.Object({
+    id: Type.Integer(),
+  })
+
+  type Get<%= Name %>Params = Static<typeof Get<%= Name %>ParamsSchema>
+
+  const Get<%= Name %>ResponseSchema = Type.Object({
+    id: Type.Integer(),
+    name: Type.String(),
+  })
+
+  f.get<{ Params: Get<%= Name %>Params }>(
+    '/:id',
+    {
+      schema: {
+        params: Get<%= Name %>ParamsSchema,
+        response: {
+          200: Get<%= Name %>ResponseSchema,
+        },
+      },
+    },
+    async (request) => {
+      return f.<%= h.changeCase.camel(name) %>Repository.get(request.params.id as <%= Name %>Id)
+    }
+  )
+
+  const Create<%= Name %>BodySchema = Type.Object({
+    name: Type.String(),
+  })
+
+  type Create<%= Name %>Body = Static<typeof Create<%= Name %>BodySchema>
+
+  f.post<{ Body: Create<%= Name %>Body }>(
+    '/',
+    {
+      schema: {
+        body: Create<%= Name %>BodySchema,
+      },
+    },
+    async (request) => {
+      await f.<%= h.changeCase.camel(name) %>Repository.create(request.body)
+    }
+  )
+
+  const Update<%= Name %>ParamsSchema = Type.Object({
+    id: Type.Integer(),
+  })
+
+  const Update<%= Name %>BodySchema = Type.Object({
+    name: Type.Optional(Type.String()),
+  })
+
+  type Update<%= Name %>Params = Static<typeof Update<%= Name %>ParamsSchema>
+
+  type Update<%= Name %>Body = Static<typeof Update<%= Name %>BodySchema>
+
+  f.put<{ Params: Update<%= Name %>Params; Body: Update<%= Name %>Body }>(
+    '/',
+    {
+      schema: {
+        params: Update<%= Name %>ParamsSchema,
+        body: Update<%= Name %>BodySchema,
+      },
+    },
+    async (request) => {
+      await f.<%= h.changeCase.camel(name) %>Repository.update(request.params.id as <%= Name %>Id, request.body)
+    }
+  )
+
+  const Delete<%= Name %>ParamsSchema = Type.Object({
+    id: Type.Integer(),
+  })
+
+  type Delete<%= Name %>Params = Static<typeof Delete<%= Name %>ParamsSchema>
+
+  f.delete<{ Params: Delete<%= Name %>Params }>(
+    '/',
+    {
+      schema: {
+        params: Delete<%= Name %>ParamsSchema,
+      },
+    },
+    async (request) => {
+      await f.<%= h.changeCase.camel(name) %>Repository.delete(request.params.id as <%= Name %>Id)
+    }
+  )
+}
