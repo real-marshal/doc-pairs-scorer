@@ -46,9 +46,17 @@ describe('ScoreRepository', () => {
 
     expect(createdRow).toEqual(testScore)
 
-    const readRow = await scoreRepository.get(1 as DocumentId, 2 as DocumentId)
+    const readRow = await scoreRepository.get({ doc1: 1 as DocumentId, doc2: 2 as DocumentId })
 
-    expect(readRow).toEqual(testScore)
+    expect(readRow).toMatchInlineSnapshot(`
+      {
+        "doc1Content": "doc1",
+        "doc1Id": 1,
+        "doc2Content": "doc2",
+        "doc2Id": 2,
+        "value": 4,
+      }
+    `)
 
     await scoreRepository.update(1 as DocumentId, 2 as DocumentId, { value: 7 })
 

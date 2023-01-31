@@ -1,6 +1,7 @@
 import type { DocumentControllerFastifyInstance } from './index'
 import { Type } from '@sinclair/typebox'
 import type { DocumentId } from '@/schemas'
+import { SortDirection } from '@/types/common'
 
 export default function DocumentController(f: DocumentControllerFastifyInstance) {
   f.get(
@@ -25,6 +26,32 @@ export default function DocumentController(f: DocumentControllerFastifyInstance)
     }
   )
 
+  f.get(
+    '/',
+    {
+      schema: {
+        tags: ['document'],
+        operationId: 'getDocuments',
+        querystring: Type.Object({
+          page: Type.Optional(Type.Integer()),
+          count: Type.Optional(Type.Integer()),
+          sortDirection: Type.Optional(Type.Enum(SortDirection)),
+        }),
+        response: {
+          200: Type.Array(
+            Type.Object({
+              id: Type.Integer(),
+              content: Type.String(),
+            })
+          ),
+        },
+      },
+    },
+    async (request) => {
+      return f.documentRepository.getDocuments(request.query)
+    }
+  )
+
   f.post(
     '/',
     {
@@ -34,15 +61,22 @@ export default function DocumentController(f: DocumentControllerFastifyInstance)
         body: Type.Object({
           content: Type.String(),
         }),
+        response: {
+          200: Type.Object({
+            id: Type.Integer(),
+            content: Type.String(),
+          }),
+        },
       },
     },
     async (request) => {
-      await f.documentRepository.create(request.body)
+      const id = await f.documentRepository.create(request.body)
+      return f.documentRepository.get(id)
     }
   )
 
   f.put(
-    '/',
+    '/:id',
     {
       schema: {
         tags: ['document'],
@@ -61,7 +95,7 @@ export default function DocumentController(f: DocumentControllerFastifyInstance)
   )
 
   f.delete(
-    '/',
+    '/:id',
     {
       schema: {
         tags: ['document'],
@@ -82,7 +116,7 @@ export default function DocumentController(f: DocumentControllerFastifyInstance)
       schema: {
         tags: ['document'],
         operationId: 'getRandomPairs',
-        params: Type.Object({
+        querystring: Type.Object({
           num: Type.Optional(Type.Integer({ maximum: 1000 })),
         }),
         response: {
@@ -102,7 +136,23 @@ export default function DocumentController(f: DocumentControllerFastifyInstance)
       },
     },
     async (request) => {
-      return f.documentRepository.getRandomPairs(request.params.num)
+      return f.documentRepository.getRandomPairs(request.query.num)
+    }
+  )
+
+  f.get(
+    '/count',
+    {
+      schema: {
+        tags: ['document'],
+        operationId: 'countPages',
+        response: {
+          200: Type.Integer(),
+        },
+      },
+    },
+    async () => {
+      return f.documentRepository.countPages()
     }
   )
 }

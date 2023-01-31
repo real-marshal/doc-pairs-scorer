@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Doc Pairs Scorer</title>
+        <link rel="stylesheet" href="assets/water.css">
+        <style>
+            header {
+              display: flex;
+              justify-content: space-between;
+            }
+
+            header h1 {
+              display: inline-block;
+              margin: 0;
+            }
+
+            header nav {
+              display: flex;
+              align-items: center;
+            }
+
+            section {
+              display: flex;
+              flex-direction: column;
+            }
+
+            .menu li {
+              list-style: none;
+              font-size: 1.2rem;
+            }
+
+            .menu ul {
+              display: inline-flex;
+              gap: 50px;
+            }
+
+            .menu a {
+              color: var(--text-main);
+            }
+
+            .menu a.active {
+              color: var(--links);
+              text-decoration: underline;
+            }
+
+            textarea {
+              resize: none;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1>Doc Pairs Scorer</h1>
+            <nav class="menu">
+                <ul>
+                    <li><a href="documents">documents</a></li>
+                    <li><a href="scores">scores</a></li>
+                </ul>
+            </nav>
+        </header>
+        <section>
+            <%- body -%>
+        </section>
+    </body>
+</html>

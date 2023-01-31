@@ -1,10 +1,36 @@
 import type { AppFastifyInstance } from '@/app/app'
 import type { Document, DocumentId, DocumentInitializer, DocumentMutator } from '@/schemas'
+import { SortDirection } from '@/types/common'
+import { DEFAULT_PAGE_COUNT } from '@/constants/etc'
 
 export default function DocumentRepository(f: AppFastifyInstance) {
   const { createCRUD, knex } = f.DBService
 
   const CRUD = createCRUD<Document, DocumentId, DocumentInitializer, DocumentMutator>('document')
+
+  async function getDocuments({
+    page = 1,
+    count = DEFAULT_PAGE_COUNT,
+    sortDirection = SortDirection.DESC,
+  }: {
+    page?: number
+    count?: number
+    sortDirection?: SortDirection
+  }) {
+    return knex.raw(
+      `
+      select *
+      from document
+      order by id ${sortDirection}
+      limit :count
+      offset :offset
+    `,
+      {
+        count,
+        offset: (page - 1) * count,
+      }
+    )
+  }
 
   async function getRandomPairs(num = 100): Promise<Array<[Document, Document]>> {
     const results = await knex.raw<
@@ -28,8 +54,18 @@ export default function DocumentRepository(f: AppFastifyInstance) {
     ])
   }
 
+  async function countPages(pageCount = DEFAULT_PAGE_COUNT) {
+    const [countRow] = await knex.raw<[{ count: number }]>(`
+      select count(*) from document
+    `)
+
+    return Math.ceil(countRow!.count / pageCount)
+  }
+
   return {
     ...CRUD,
+    getDocuments,
     getRandomPairs,
+    countPages,
   }
 }

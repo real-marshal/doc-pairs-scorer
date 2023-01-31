@@ -1,0 +1,235 @@
+<script type="module">
+  import { setActiveLink, renderPagination } from "../assets/script.js"
+  import { API } from '../assets/api.js'
+
+  const newPairButton = document.querySelector('#new-pair')
+  const submitButton = document.querySelector('#submit')
+  const scoreInput = document.querySelector('#score-input')
+  const scoresElement = document.querySelector('#scores')
+
+  const api = new API()
+
+  const MAX_INPUT_LENGTH = 2
+
+  let pair = []
+
+  const loadRandomPair = async () => {
+    const doc1Element = document.querySelector('#doc1')
+    const doc2Element = document.querySelector('#doc2')
+
+    newPairButton.textContent = 'Loading...'
+
+    try {
+      [pair] = await api.document.getRandomPairs(1)
+
+      if (!pair) {
+        return newPairButton.textContent = 'Not enough documents to make a pair'
+      }
+
+      doc1Element.value = pair[0].content
+      doc2Element.value = pair[1].content
+
+      newPairButton.textContent = 'Get new pair'
+    } catch (err) {
+      newPairButton.textContent = err.toString()
+    }
+  }
+
+  const renderScorePagination = async () => {
+    const totalPages = await api.score.countPages()
+
+    renderPagination({
+      currentPage: <%= page %>,
+      paginationContainer: document.querySelector('#pagination'),
+      to: 'scores',
+      totalPages
+    })
+  }
+
+  const createScoreElement = score => {
+    const container = document.createElement('div')
+    const textArea1Element = document.createElement('textarea')
+    const textArea2Element = document.createElement('textarea')
+    const buttonsContainer = document.createElement('div')
+    const scoreInput = document.createElement('input')
+    const editButton = document.createElement('button')
+    const deleteButton = document.createElement('button')
+    const updateButton = document.createElement('button')
+
+    textArea1Element.rows = 4
+    textArea1Element.maxLength = 400
+    textArea1Element.value = score.doc1Content
+    textArea1Element.readOnly = true
+
+    textArea2Element.rows = 4
+    textArea2Element.maxLength = 400
+    textArea2Element.value = score.doc2Content
+    textArea2Element.readOnly = true
+
+    buttonsContainer.classList.add('doc-buttons')
+
+    scoreInput.value = score.value
+    scoreInput.type = 'number'
+    scoreInput.min = '0'
+    scoreInput.max = '10'
+    scoreInput.size = 2
+    scoreInput.readOnly = true
+
+    editButton.textContent = 'edit'
+    editButton.addEventListener('click', () => {
+      const isCanceling = !scoreInput.readOnly
+
+      scoreInput.readOnly = isCanceling
+      editButton.textContent = isCanceling ? 'edit' : 'cancel'
+
+      if (isCanceling) {
+        scoreInput.value = score.value
+      } else {
+        scoreInput.focus()
+        updateButton.style.display = 'block'
+      }
+    })
+
+    deleteButton.textContent = 'delete'
+    deleteButton.addEventListener('click', async () => {
+      if (!confirm('Sure?')) return
+
+      try {
+        await api.score.deleteScore(score.doc1Id, score.doc2Id)
+        container.remove()
+      } catch (e) {
+        alert(e)
+      }
+    })
+
+    updateButton.textContent = 'update'
+    updateButton.style.display = 'none'
+    updateButton.addEventListener('click', async (e) => {
+      try {
+        await api.score.updateScore(
+          score.doc1Id,
+          score.doc2Id,
+          { value: scoreInput.value }
+        )
+        e.target.style.display = 'none'
+        editButton.textContent = 'edit'
+      } catch (e) {
+        alert(e)
+      }
+    })
+
+    buttonsContainer.append(scoreInput, updateButton, editButton, deleteButton)
+
+    container.append(textArea1Element, textArea2Element, buttonsContainer)
+
+    return container
+  }
+
+  const loadScores = async () => {
+    const loadingElement = document.querySelector('#loading')
+
+    loadingElement.style.display = 'block'
+    try {
+      const scores = await api.score.getScore(null, null, <%= page %>)
+      const elements = scores.map(createScoreElement)
+
+      loadingElement.style.display = 'none'
+      scoresElement.append(...elements)
+    } catch (e) {
+      loadingElement.textContent = e.toString()
+    }
+  }
+
+  scoreInput.addEventListener('input', e => {
+    if (e.target.value.length > MAX_INPUT_LENGTH) {
+      scoreInput.value = e.target.value.slice(0, MAX_INPUT_LENGTH)
+    }
+
+    submitButton.disabled = !e.target.validity.valid
+  })
+
+  newPairButton.addEventListener('click', () => {
+    loadRandomPair()
+  })
+
+  submitButton.addEventListener('click', async () => {
+    try {
+      await api.score.createScore({
+        doc1: pair[0].id,
+        doc2: pair[1].id,
+        value: parseInt(scoreInput.value)
+      })
+      await Promise.all([
+        loadRandomPair(),
+        (async () => {
+          const newScore = await api.score.getScore(pair[0].id, pair[1].id)
+
+          scoresElement.prepend(createScoreElement(newScore))
+        })()
+      ])
+      scoreInput.value = ''
+    } catch (e) {
+      alert(e)
+    }
+  })
+
+  setActiveLink('scores')
+  loadRandomPair()
+  renderScorePagination()
+  loadScores()
+</script>
+<style>
+    .score-panel {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .score-form {
+      display: flex;
+      align-items: center;
+    }
+
+    .score-form label {
+      font-size: 1.2rem;
+      padding-right: 10px;
+    }
+
+    #score-input:invalid {
+      box-shadow: 0 0 0 2px palevioletred;
+    }
+
+    #pagination {
+      display: flex;
+      flex-direction: row;
+      gap: 10px;
+      align-self: flex-end;
+    }
+
+    .doc-buttons {
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-end;
+      gap: 5px;
+    }
+
+    .doc-buttons button, input {
+      padding: 5px 10px;
+    }
+</style>
+<h2>Score the pair</h2>
+<textarea id="doc1" name="doc1" rows="4" maxlength="400" readonly></textarea>
+<textarea id="doc2" name="doc2" rows="4" maxlength="400" readonly></textarea>
+<div class="score-panel">
+    <button id="new-pair">Get new pair</button>
+    <div class="score-form">
+        <label for="score-input">score:</label>
+        <input id="score-input" name="score-input" type="number" min="0" max="10" size="2">
+        <button id="submit">Submit</button>
+    </div>
+</div>
+<h2>Scores</h2>
+<p id="loading">Loading...</p>
+<div id="pagination"></div>
+<section id="scores"></section>
+
+

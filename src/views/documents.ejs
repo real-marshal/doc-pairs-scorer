@@ -1,0 +1,204 @@
+<script type="module">
+  import { setActiveLink, renderPagination } from "../assets/script.js"
+  import { API } from '../assets/api.js'
+
+  const api = new API()
+
+  const docElement = document.querySelector('#doc')
+  const contentLengthElement = document.querySelector('#content-length')
+  const docFormElement = document.querySelector('#doc-form')
+  const submitButton = document.querySelector('#doc-form  button[type=submit]')
+  const docsElement = document.querySelector('#docs')
+
+  const setContentLength = length => contentLengthElement.textContent = length
+  const validateContent = length => {
+    if (length >= 400) {
+      docElement.classList.add('error')
+      submitButton.disabled = true
+      return
+    }
+
+    docElement.classList.remove('error')
+    submitButton.disabled = !length
+  }
+
+  const renderDocPagination = async () => {
+    const totalPages = await api.document.countPages()
+
+    renderPagination({
+      currentPage: <%= page %>,
+      paginationContainer: document.querySelector('#pagination'),
+      to: 'documents',
+      totalPages
+    })
+  }
+
+  const createDocElement = doc => {
+    const container = document.createElement('div')
+    const textAreaElement = document.createElement('textarea')
+    const buttonsContainer = document.createElement('div')
+    const editButton = document.createElement('button')
+    const deleteButton = document.createElement('button')
+    const updateButton = document.createElement('button')
+
+    textAreaElement.rows = 4
+    textAreaElement.maxLength = 400
+    textAreaElement.value = doc.content
+    textAreaElement.readOnly = true
+
+    buttonsContainer.classList.add('doc-buttons')
+
+    editButton.textContent = 'edit'
+    editButton.addEventListener('click', () => {
+      const isCanceling = !textAreaElement.readOnly
+
+      textAreaElement.readOnly = isCanceling
+      editButton.textContent = isCanceling ? 'edit' : 'cancel'
+
+      if (isCanceling) {
+        textAreaElement.value = doc.content
+      } else {
+        textAreaElement.focus()
+        updateButton.style.display = 'block'
+      }
+    })
+
+    deleteButton.textContent = 'delete'
+    deleteButton.addEventListener('click', async () => {
+      if (!confirm('Sure?')) return
+
+      try {
+        await api.document.deleteDocument(doc.id)
+        container.remove()
+      } catch (e) {
+        alert(e)
+      }
+    })
+
+    updateButton.textContent = 'update'
+    updateButton.style.display = 'none'
+    updateButton.addEventListener('click', async (e) => {
+      try {
+        await api.document.updateDocument(doc.id, { content: textAreaElement.value })
+        e.target.style.display = 'none'
+        editButton.textContent = 'edit'
+      } catch (e) {
+        alert(e)
+      }
+    })
+
+    buttonsContainer.append(updateButton, editButton, deleteButton)
+
+    container.append(textAreaElement, buttonsContainer)
+
+    return container
+  }
+
+  const loadDocs = async () => {
+    const loadingElement = document.querySelector('#loading')
+
+    loadingElement.style.display = 'block'
+    try {
+      const docs = await api.document.getDocuments(<%= page %>)
+      const elements = docs.map(createDocElement)
+
+      loadingElement.style.display = 'none'
+      docsElement.append(...elements)
+    } catch (e) {
+      loadingElement.textContent = e.toString()
+    }
+  }
+
+  docElement.addEventListener('input', e => {
+    const inputLength = e.target.value.length
+
+    setContentLength(inputLength)
+    validateContent(inputLength)
+  })
+
+  docFormElement.addEventListener('submit', async e => {
+    e.preventDefault()
+    submitButton.disabled = true
+    try {
+      const newDoc = await api.document.createDocument({ content: e.target.elements.doc.value })
+      const newDocElement = createDocElement(newDoc)
+
+      docsElement.prepend(newDocElement)
+      docElement.value = ''
+      setContentLength(0)
+    } catch (e) {
+      alert(e)
+    } finally {
+      submitButton.disabled = false
+    }
+  })
+
+  setActiveLink('documents')
+  loadDocs()
+  renderDocPagination()
+  setContentLength(docElement.value.length.toString())
+  validateContent(docElement.value.length)
+</script>
+<style>
+    #doc.error {
+      box-shadow: 0 0 0 2px palevioletred;
+    }
+
+    .content-length-line {
+      display: inline-block;
+      margin: 0;
+    }
+
+    .doc-panel {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      padding: 10px 0;
+    }
+
+    .doc-buttons {
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-end;
+      gap: 5px;
+    }
+
+    #docs {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .doc-buttons button {
+      padding: 5px 10px;
+    }
+
+    #pagination {
+      display: flex;
+      flex-direction: row;
+      gap: 10px;
+      align-self: flex-end;
+    }
+
+    #pagination a {
+      color: var(--text-main);
+    }
+
+    #pagination a.active {
+      color: var(--links);
+    }
+</style>
+<h2>Creating a new document</h2>
+<form id="doc-form">
+    <textarea id="doc" name="doc" rows="4" maxlength="400"></textarea>
+    <div class="doc-panel">
+        <button type="submit">Submit</button>
+        <p class="content-length-line">Current length: <span id="content-length">0</span> chars.</p>
+    </div>
+</form>
+<h2>Documents</h2>
+<p id="loading">Loading...</p>
+<div id="pagination"></div>
+<section id="docs"></section>
+
+

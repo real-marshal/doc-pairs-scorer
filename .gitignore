@@ -69,3 +69,4 @@ jspm_packages/
 .cache
 dist
 sentences.sqlite3
+openapi_typescript_codegen

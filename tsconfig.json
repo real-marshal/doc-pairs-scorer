@@ -41,5 +41,5 @@
     "allowJs": false
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "**/*.{test,spec}.ts", "dist/**/*"]
+  "exclude": ["node_modules", "**/*.{test,spec}.ts", "dist/**/*", "openapi_typescript_codegen/**"]
 }

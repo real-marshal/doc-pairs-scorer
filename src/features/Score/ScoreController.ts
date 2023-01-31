@@ -1,6 +1,7 @@
 import type { ScoreControllerFastifyInstance } from './index'
 import { Type } from '@sinclair/typebox'
 import type { DocumentId } from '@/schemas'
+import { SortDirection } from '@/types/common'
 
 export default function ScoreController(f: ScoreControllerFastifyInstance) {
   f.get(
@@ -9,23 +10,51 @@ export default function ScoreController(f: ScoreControllerFastifyInstance) {
       schema: {
         tags: ['score'],
         operationId: 'getScore',
-        querystring: Type.Object({
-          doc1: Type.Integer(),
-          doc2: Type.Integer(),
-        }),
-        response: {
-          200: Type.Object({
+        querystring: Type.Union([
+          Type.Object({
             doc1: Type.Integer(),
             doc2: Type.Integer(),
-            value: Type.Integer(),
           }),
+          Type.Object({
+            page: Type.Optional(Type.Integer()),
+            count: Type.Optional(Type.Integer()),
+            sortDirection: Type.Optional(Type.Enum(SortDirection)),
+          }),
+        ]),
+        response: {
+          200: Type.Union([
+            Type.Object({
+              doc1Id: Type.Integer(),
+              doc1Content: Type.String(),
+              doc2Id: Type.Integer(),
+              doc2Content: Type.String(),
+              value: Type.Integer(),
+            }),
+            Type.Array(
+              Type.Object({
+                doc1Id: Type.Integer(),
+                doc1Content: Type.String(),
+                doc2Id: Type.Integer(),
+                doc2Content: Type.String(),
+                value: Type.Integer(),
+              })
+            ),
+          ]),
         },
       },
     },
-    async (request) => {
+    async ({ query }) => {
       return f.scoreRepository.get(
-        request.query.doc1 as DocumentId,
-        request.query.doc2 as DocumentId
+        'doc1' in query && 'doc2' in query
+          ? {
+              doc1: query.doc1 as DocumentId,
+              doc2: query.doc2 as DocumentId,
+            }
+          : {
+              page: query.page,
+              count: query.count,
+              sortDirection: query.sortDirection,
+            }
       )
     }
   )
@@ -93,6 +122,22 @@ export default function ScoreController(f: ScoreControllerFastifyInstance) {
         request.query.doc1 as DocumentId,
         request.query.doc2 as DocumentId
       )
+    }
+  )
+
+  f.get(
+    '/count',
+    {
+      schema: {
+        tags: ['score'],
+        operationId: 'countPages',
+        response: {
+          200: Type.Integer(),
+        },
+      },
+    },
+    async () => {
+      return f.scoreRepository.countPages()
     }
   )
 }

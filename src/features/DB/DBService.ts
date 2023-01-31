@@ -33,8 +33,9 @@ export default function DBService(f: AppFastifyInstance) {
     ModelInitializer extends object,
     ModelMutator extends object
   >(table: string) {
-    async function create(values: ModelInitializer): Promise<void> {
-      return knex(table).insert(values)
+    async function create(values: ModelInitializer): Promise<ModelId> {
+      const results = (await knex(table).insert(values, ['id'])) as Array<{ id: ModelId }>
+      return results[0]?.id as ModelId
     }
 
     async function get(id: ModelId): Promise<Model | undefined> {

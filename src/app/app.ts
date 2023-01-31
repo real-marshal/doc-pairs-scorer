@@ -13,6 +13,11 @@ import setValidator from './setValidator'
 import fastifySwagger from '@fastify/swagger'
 import packageJSON from '@/package.json'
 import fastifySwaggerUI from '@fastify/swagger-ui'
+import fastifyView from '@fastify/view'
+import ejs from 'ejs'
+import registerViews from '@/app/views'
+import fastifyStatic from '@fastify/static'
+import path from 'node:path'
 
 export interface AppError extends FastifyError {
   reqId?: string
@@ -32,6 +37,19 @@ export default async function app(f: AppFastifyInstance) {
   setValidator(f)
 
   await f.register(fastifySensible)
+
+  await f.register(fastifyView, {
+    engine: {
+      ejs,
+    },
+    root: './src/views',
+    layout: 'layout.ejs',
+  })
+
+  await f.register(fastifyStatic, {
+    root: path.resolve('./src/assets'),
+    prefix: '/assets',
+  })
 
   if (process.env.NODE_ENV === 'development') {
     await f.register(fastifySwagger, {
@@ -77,6 +95,8 @@ export default async function app(f: AppFastifyInstance) {
     },
     { prefix: 'api' }
   )
+
+  await registerViews(f)
 
   await f.ready()
 

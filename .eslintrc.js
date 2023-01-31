@@ -57,7 +57,7 @@ const disabledCommonRules = [
   'unicorn/catch-error-name',
   'unicorn/no-process-exit',
   'unicorn/template-indent',
-  'unicorn/no-negated-condition'
+  'unicorn/no-negated-condition',
 ]
 
 const commonRules = {
@@ -78,7 +78,12 @@ const TSRules = {
 }
 
 module.exports = {
-  ignorePatterns: ['dist/**'],
+  ignorePatterns: [
+    'dist/**',
+    'openapi_typescript_codegen/**',
+    'src/assets/water.css',
+    'src/assets/api.js',
+  ],
   root: true,
   env: {
     node: true,
@@ -126,6 +131,10 @@ module.exports = {
         '@typescript-eslint/no-explicit-any': 'off',
         '@typescript-eslint/dot-notation': 'off',
       },
+    },
+    {
+      files: ['./src/assets/*.js'],
+      env: { browser: true },
     },
   ],
 }
