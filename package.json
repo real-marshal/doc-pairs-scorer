@@ -11,7 +11,7 @@
     "test": "jest",
     "test:watch": "yarn test --watch",
     "test:coverage": "yarn test --coverage",
-    "start": "cross-env NODE_ENV=production TS_NODE_BASEURL=./dist/src yarn node -r tsconfig-paths/register dist/src/index.js",
+    "start": "cross-env NODE_ENV=production TS_NODE_BASEURL=./dist/src node -r tsconfig-paths/register dist/src/index.js",
     "postinstall": "husky install",
     "lint": "eslint . --cache --cache-location .cache/eslint --cache-strategy content",
     "lint:nocache": "eslint .",
