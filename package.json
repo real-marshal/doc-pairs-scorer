@@ -21,7 +21,7 @@
     "migrate:list": "yarn knex migrate:list",
     "migrate:up": "cross-env NODE_OPTIONS='-r ts-node/register' knex migrate:up",
     "migrate:down": "cross-env NODE_OPTIONS='-r ts-node/register' knex migrate:down",
-    "apigen": "openapi -i 'http://127.0.0.1:3000/docs/json' -o openapi_typescript_codegen --indent 2  --name API && rollup -c  --bundleConfigAsCjs && rimraf openapi_typescript_codegen"
+    "apigen": "openapi -i \"http://$(node -r dotenv-defaults/config -e 'console.log(process.env.HOST)'):$(node -r dotenv-defaults/config -e 'console.log(process.env.PORT)')/docs/json\" -o openapi_typescript_codegen --indent 2  --name API && rollup -c  --bundleConfigAsCjs && rimraf openapi_typescript_codegen"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.3.0",
