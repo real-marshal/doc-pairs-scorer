@@ -140,4 +140,20 @@ export default function ScoreController(f: ScoreControllerFastifyInstance) {
       return f.scoreRepository.countPages()
     }
   )
+
+  f.get(
+    '/progress',
+    {
+      schema: {
+        tags: ['score'],
+        operationId: 'getProgress',
+        response: {
+          200: Type.Number(),
+        },
+      },
+    },
+    async () => {
+      return f.scoreRepository.getProgress()
+    }
+  )
 }

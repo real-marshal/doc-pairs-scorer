@@ -1,3 +1,5 @@
+export const MAX_LENGTH = 500
+
 export const setActiveLink = (href) =>
   document.querySelector(`a[href="${href}"]`)?.classList.add('active')
 

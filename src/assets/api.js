@@ -609,6 +609,16 @@ class ScoreService {
             url: '/api/score/count',
         });
     }
+    /**
+     * @returns number Default Response
+     * @throws ApiError
+     */
+    getProgress() {
+        return this.httpRequest.request({
+            method: 'GET',
+            url: '/api/score/progress',
+        });
+    }
 }
 
 class API {

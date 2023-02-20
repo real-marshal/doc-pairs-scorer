@@ -1,5 +1,5 @@
 <script type="module">
-  import { setActiveLink, renderPagination } from "../assets/script.js"
+  import { setActiveLink, renderPagination, MAX_LENGTH } from "../assets/script.js"
   import { API } from '../assets/api.js'
 
   const api = new API()
@@ -12,7 +12,7 @@
 
   const setContentLength = length => contentLengthElement.textContent = length
   const validateContent = length => {
-    if (length >= 400) {
+    if (length >= MAX_LENGTH) {
       docElement.classList.add('error')
       submitButton.disabled = true
       return
@@ -41,8 +41,7 @@
     const deleteButton = document.createElement('button')
     const updateButton = document.createElement('button')
 
-    textAreaElement.rows = 4
-    textAreaElement.maxLength = 400
+    textAreaElement.rows = 6
     textAreaElement.value = doc.content
     textAreaElement.readOnly = true
 
@@ -57,6 +56,8 @@
 
       if (isCanceling) {
         textAreaElement.value = doc.content
+        textAreaElement.readOnly = true
+        updateButton.style.display = 'none'
       } else {
         textAreaElement.focus()
         updateButton.style.display = 'block'
@@ -82,6 +83,9 @@
         await api.document.updateDocument(doc.id, { content: textAreaElement.value })
         e.target.style.display = 'none'
         editButton.textContent = 'edit'
+        textAreaElement.readOnly = true
+        // I know it's awful but that's fine for now
+        doc.content = textAreaElement.value
       } catch (e) {
         alert(e)
       }
@@ -190,7 +194,7 @@
 </style>
 <h2>Creating a new document</h2>
 <form id="doc-form">
-    <textarea id="doc" name="doc" rows="4" maxlength="400"></textarea>
+    <textarea id="doc" name="doc" rows="10"></textarea>
     <div class="doc-panel">
         <button type="submit">Submit</button>
         <p class="content-length-line">Current length: <span id="content-length">0</span> chars.</p>

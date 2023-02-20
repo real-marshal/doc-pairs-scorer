@@ -22,8 +22,8 @@
     try {
       [pair] = await api.document.getRandomPairs(1)
 
-      if (!pair) {
-        return newPairButton.textContent = 'Not enough documents to make a pair'
+      if (!pair.length) {
+        return newPairButton.textContent = 'Not enough docs to make a pair'
       }
 
       doc1Element.value = pair[0].content
@@ -56,13 +56,11 @@
     const deleteButton = document.createElement('button')
     const updateButton = document.createElement('button')
 
-    textArea1Element.rows = 4
-    textArea1Element.maxLength = 400
+    textArea1Element.rows = 6
     textArea1Element.value = score.doc1Content
     textArea1Element.readOnly = true
 
-    textArea2Element.rows = 4
-    textArea2Element.maxLength = 400
+    textArea2Element.rows = 6
     textArea2Element.value = score.doc2Content
     textArea2Element.readOnly = true
 
@@ -84,6 +82,8 @@
 
       if (isCanceling) {
         scoreInput.value = score.value
+        scoreInput.readOnly = true
+        updateButton.style.display = 'none'
       } else {
         scoreInput.focus()
         updateButton.style.display = 'block'
@@ -113,6 +113,9 @@
         )
         e.target.style.display = 'none'
         editButton.textContent = 'edit'
+        scoreInput.readOnly = true
+        // I know it's awful but that's fine for now
+        score.value = scoreInput.value
       } catch (e) {
         alert(e)
       }
@@ -140,12 +143,34 @@
     }
   }
 
+  const loadProgress = async () => {
+    const loadingElement = document.querySelector('#progress-error')
+    const progressBarElement = document.querySelector('#progress-bar')
+    const progressBarValueElement = document.querySelector('#progress-bar-value')
+
+    loadingElement.textContent = 'Loading progress...'
+    loadingElement.style.display = 'block'
+    try {
+      const progress = await api.score.getProgress()
+
+      loadingElement.style.display = 'none'
+      progressBarElement.style.display = 'block'
+      progressBarElement.value = progress
+      progressBarValueElement.textContent = `${progress}%`
+    } catch (e) {
+      loadingElement.textContent = e.toString()
+    }
+  }
+
   scoreInput.addEventListener('input', e => {
     if (e.target.value.length > MAX_INPUT_LENGTH) {
       scoreInput.value = e.target.value.slice(0, MAX_INPUT_LENGTH)
     }
 
-    submitButton.disabled = !e.target.validity.valid
+    submitButton.disabled =
+      !e.target.validity.valid ||
+      e.target.value === '' ||
+      !pair.length
   })
 
   newPairButton.addEventListener('click', () => {
@@ -177,6 +202,7 @@
   loadRandomPair()
   renderScorePagination()
   loadScores()
+  loadProgress()
 </script>
 <style>
     .score-panel {
@@ -215,16 +241,67 @@
     .doc-buttons button, input {
       padding: 5px 10px;
     }
+
+    #progress-error, #progress-bar {
+      display: none;
+    }
+
+    #progress-bar {
+      background: var(--background);
+      border-radius: 6px;
+      border: none;
+      height: 1.5rem;
+      width: 100%;
+      position: relative;
+    }
+
+    #progress-bar::-webkit-progress-bar {
+      background: var(--background);
+      border-radius: 6px;
+      border: none;
+      height: 1.5rem;
+      width: 100%;
+      position: relative;
+    }
+
+    #progress-bar::-moz-progress-bar
+    {
+      border-radius: 6px;
+      background: var(--text-main);
+    }
+
+    #progress-bar::-webkit-progress-value
+    {
+      border-radius: 6px;
+      background: var(--text-main);
+    }
+
+    #progress-bar-value {
+      position: absolute;
+      left: calc(50% - 2ch);
+      top: 0;
+      color: var(--links);
+    }
+
+    #progress-bar-container {
+      position: relative;
+    }
 </style>
+<h2>Current progress</h2>
+<div id="progress-bar-container">
+    <progress id="progress-bar" value="30" max="100"></progress>
+    <span id="progress-bar-value"></span>
+</div>
+<p id="progress-error"></p>
 <h2>Score the pair</h2>
-<textarea id="doc1" name="doc1" rows="4" maxlength="400" readonly></textarea>
-<textarea id="doc2" name="doc2" rows="4" maxlength="400" readonly></textarea>
+<textarea id="doc1" name="doc1" rows="10" readonly></textarea>
+<textarea id="doc2" name="doc2" rows="10" readonly></textarea>
 <div class="score-panel">
     <button id="new-pair">Get new pair</button>
     <div class="score-form">
         <label for="score-input">score:</label>
         <input id="score-input" name="score-input" type="number" min="0" max="10" size="2">
-        <button id="submit">Submit</button>
+        <button id="submit" disabled>Submit</button>
     </div>
 </div>
 <h2>Scores</h2>

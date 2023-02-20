@@ -81,11 +81,48 @@ export default function ScoreRepository(f: AppFastifyInstance) {
     return Math.ceil(countRow!.count / pageCount)
   }
 
+  async function getProgress() {
+    const [progressRow] = await knex.raw<[{ progress: number }]>(
+      `
+      with recursive
+        docs_count as (
+          select count(*) as c from document
+        ),
+        score_count as (
+          select count(*) as c from score
+        ),
+        fac_rows(n, f) as (
+          select c, c from docs_count
+          union all
+          select n-1 as n, (n-1)*f
+          from fac_rows
+                 left join docs_count on true
+          where n > c-:k+1
+        ),
+        combinations as (
+          select f/:k as combs
+          from fac_rows
+          order by n
+          limit 1
+        )
+      select round(cast(c as real) / combs * 100, 2) as progress
+      from combinations
+      left join score_count on true;
+    `,
+      {
+        k: 2,
+      }
+    )
+
+    return progressRow!.progress
+  }
+
   return {
     create,
     get,
     update,
     delete: _delete,
     countPages,
+    getProgress,
   }
 }
