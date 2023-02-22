@@ -148,7 +148,7 @@
     const progressBarElement = document.querySelector('#progress-bar')
     const progressBarValueElement = document.querySelector('#progress-bar-value')
 
-    loadingElement.textContent = 'Loading progress...'
+    loadingElement.textContent ??= 'Loading progress...'
     loadingElement.style.display = 'block'
     try {
       const progress = await api.score.getProgress()
@@ -190,7 +190,8 @@
           const newScore = await api.score.getScore(pair[0].id, pair[1].id)
 
           scoresElement.prepend(createScoreElement(newScore))
-        })()
+        })(),
+        loadProgress()
       ])
       scoreInput.value = ''
     } catch (e) {
